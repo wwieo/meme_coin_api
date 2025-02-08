@@ -1,0 +1,25 @@
+{
+  "service_address": {
+    "meme_coin": ":8000"
+  },
+  "database_management_system" : {
+    "mysql": {
+      "meme_coin": {
+        "host": "127.0.0.1",
+        "port": 3306,
+        "account": "root",
+        "password": "",
+        "database": "meme_coin",
+        "max_open": 8,
+        "max_idle": 3
+      }
+    },
+    "redis": {
+      "meme_coin": {
+        "address": "127.0.0.1:6379",
+        "password": "",
+        "db": 3
+      }
+    }
+  }
+}

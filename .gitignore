@@ -1,0 +1,7 @@
+# ide
+.idea
+.DS_Store
+.run
+
+# docs
+docs
