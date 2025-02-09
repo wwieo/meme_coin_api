@@ -1,0 +1,27 @@
+services:
+  app:
+    container_name: meme_coin
+    restart: on-failure
+    image: meme_coin
+    ports:
+      - "8000:8000"
+    working_dir: /app
+  db:
+    container_name: mysql
+    image: mysql:latest
+    restart: always
+    volumes:
+      - ./sqls:/docker-entrypoint-initdb.d
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_DATABASE="meme_coin"
+      - MYSQL_USER="root"
+      - MYSQL_PASSWORD=""
+    ports:
+      - 3306:3306
+  cache:
+    container_name: redis
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379
