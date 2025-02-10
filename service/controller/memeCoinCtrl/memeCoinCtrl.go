@@ -5,10 +5,10 @@ import (
 	"go.uber.org/dig"
 	"gorm.io/gorm"
 	"meme_coin_api/service/dao/orm/gormDao"
+	"meme_coin_api/service/internal/errorx"
 	"meme_coin_api/service/internal/model"
 	boMemeCoin "meme_coin_api/service/internal/model/bo/memeCoin"
 	"meme_coin_api/service/internal/utils"
-	"time"
 )
 
 type MemeCoinCtrl interface {
@@ -37,18 +37,17 @@ type memeCoinCtrl struct {
 
 func (ctrl *memeCoinCtrl) Create(ctx context.Context, args boMemeCoin.CreateArgs) error {
 	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
+	if exist, err := dao.Exist(args.Name); err != nil || exist {
+		return errorx.RecordExisted
+	}
+
 	id := utils.GetSnowflakeIDInt64()
 	coinInfo := &model.CoinInfo{
 		ID:          id,
 		Name:        args.Name,
 		Description: args.Description,
-		CreatedAt:   time.Now(),
 	}
-	coinScore := &model.CoinScore{
-		CoinID:          id,
-		PopularityScore: 0,
-	}
-	return dao.Create(coinInfo, coinScore)
+	return dao.Create(coinInfo)
 }
 
 func (ctrl *memeCoinCtrl) Get(ctx context.Context, args boMemeCoin.GetArgs) (boMemeCoin.GetReply, error) {

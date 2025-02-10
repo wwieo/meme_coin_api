@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"go.uber.org/dig"
+	"gorm.io/gorm"
 	"meme_coin_api/service/api"
 	"meme_coin_api/service/controller/memeCoinCtrl"
 	"meme_coin_api/service/internal/config"
 	"meme_coin_api/service/internal/database"
 	"meme_coin_api/service/internal/flags"
+	"meme_coin_api/service/internal/model"
 	"net/http"
 )
 
@@ -32,6 +34,10 @@ func (srv *memeCoin) Run() {
 	srv.provideService(container)
 
 	srv.provideController(container)
+
+	if err := container.Invoke(srv.invokeDBMigrate); err != nil {
+		panic(err)
+	}
 
 	srv.invokeApiRoutes(container)
 
@@ -72,6 +78,18 @@ func (srv *memeCoin) provideService(container *dig.Container) {
 
 func (srv *memeCoin) provideController(container *dig.Container) {
 	if err := container.Provide(memeCoinCtrl.New); err != nil {
+		panic(err)
+	}
+}
+
+type migratePack struct {
+	dig.In
+
+	MySQLMemeCoin *gorm.DB `name:"meme_coin"`
+}
+
+func (srv *memeCoin) invokeDBMigrate(pack migratePack) {
+	if err := model.MemeCoinMigrate(pack.MySQLMemeCoin); err != nil {
 		panic(err)
 	}
 }

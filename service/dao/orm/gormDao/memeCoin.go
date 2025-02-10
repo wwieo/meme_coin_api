@@ -3,7 +3,6 @@ package gormDao
 import (
 	"gorm.io/gorm"
 	"meme_coin_api/service/dao"
-	"meme_coin_api/service/internal/errorx"
 	"meme_coin_api/service/internal/model"
 )
 
@@ -17,20 +16,25 @@ func NewMemeCoinDao(db *gorm.DB) dao.MemeCoinDao {
 	}
 }
 
-func (dao *memeCoinDao) Create(coinInfo *model.CoinInfo, coinScore *model.CoinScore) error {
+func (dao *memeCoinDao) Exist(name string) (bool, error) {
+	var count int64
+	if err := dao.db.Table(model.TableCoinInfo.String()).
+		Where("name = ?", name).
+		Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (dao *memeCoinDao) Create(coinInfo *model.CoinInfo) error {
 	return dao.db.Transaction(func(tx *gorm.DB) error {
-		result := tx.Table(model.TableCoinInfo.String()).
-			Where("coin_info.name", coinInfo.Name).
-			FirstOrCreate(coinInfo)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return errorx.RecordExisted
+		if err := tx.Table(model.TableCoinInfo.String()).
+			Create(coinInfo).Error; err != nil {
+			return err
 		}
 
-		coinScore.CoinID = coinInfo.ID
-		if err := tx.Table(model.TableCoinScore.String()).Create(coinScore).Error; err != nil {
+		if err := tx.Table(model.TableCoinScore.String()).
+			Create(&model.CoinScore{CoinID: coinInfo.ID}).Error; err != nil {
 			return err
 		}
 		return nil
