@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/dig"
 	"meme_coin_api/service/api"
+	"meme_coin_api/service/controller/memeCoinCtrl"
 	"meme_coin_api/service/internal/config"
 	"meme_coin_api/service/internal/database"
 	"meme_coin_api/service/internal/flags"
@@ -70,11 +71,17 @@ func (srv *memeCoin) provideService(container *dig.Container) {
 }
 
 func (srv *memeCoin) provideController(container *dig.Container) {
-
+	if err := container.Provide(memeCoinCtrl.New); err != nil {
+		panic(err)
+	}
 }
 
 func (srv *memeCoin) invokeApiRoutes(container *dig.Container) {
 	if err := container.Invoke(api.NewBasic); err != nil {
+		panic(err)
+	}
+
+	if err := container.Invoke(api.NewMemeCoin); err != nil {
 		panic(err)
 	}
 }

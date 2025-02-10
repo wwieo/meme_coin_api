@@ -3,6 +3,7 @@ module meme_coin_api
 go 1.23
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0

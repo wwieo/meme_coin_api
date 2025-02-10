@@ -3,6 +3,7 @@ package gormDao
 import (
 	"gorm.io/gorm"
 	"meme_coin_api/service/dao"
+	"meme_coin_api/service/internal/errorx"
 	"meme_coin_api/service/internal/model"
 )
 
@@ -18,9 +19,14 @@ func NewMemeCoinDao(db *gorm.DB) dao.MemeCoinDao {
 
 func (dao *memeCoinDao) Create(coinInfo *model.CoinInfo, coinScore *model.CoinScore) error {
 	return dao.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Table(model.TableCoinInfo.String()).
-			Create(coinInfo).Error; err != nil {
-			return err
+		result := tx.Table(model.TableCoinInfo.String()).
+			Where("coin_info.name", coinInfo.Name).
+			FirstOrCreate(coinInfo)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errorx.RecordExisted
 		}
 
 		coinScore.CoinID = coinInfo.ID

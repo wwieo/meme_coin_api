@@ -27,7 +27,7 @@ func NewServer(pack servicePack) *http.Server {
 }
 
 func NewRouterRoot(pack servicePack) *gin.RouterGroup {
-	return pack.Handler.Group("meme_coin")
+	return pack.Handler.Group("meme_coin_api")
 }
 
 func NewGinEngine() *gin.Engine {
