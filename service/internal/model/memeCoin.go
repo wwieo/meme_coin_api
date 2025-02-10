@@ -17,10 +17,10 @@ type MemeCoin struct {
 }
 
 type CoinInfo struct {
-	ID          int64     `json:"id" gorm:"primaryKey;column:id;autoIncrement:false"`
+	ID          int64     `json:"-" gorm:"primaryKey;column:id;autoIncrement:false"`
 	Name        string    `json:"name" gorm:"type:varchar(255);not null;column:name;uniqueIndex"`
 	Description string    `json:"description" gorm:"type:text;column:description"`
-	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime;column:created_at"`
+	CreatedAt   time.Time `json:"-" gorm:"autoCreateTime;column:created_at"`
 }
 
 func (*CoinInfo) TableName() string {
@@ -28,7 +28,7 @@ func (*CoinInfo) TableName() string {
 }
 
 type CoinScore struct {
-	CoinID          int64 `json:"coin_id" gorm:"column:coin_id;not null;uniqueIndex:idx_coin_id"`
+	CoinID          int64 `json:"-" gorm:"column:coin_id;not null;uniqueIndex:idx_coin_id"`
 	PopularityScore int   `json:"popularity_score" gorm:"type:int;not null;column:popularity_score"`
 }
 

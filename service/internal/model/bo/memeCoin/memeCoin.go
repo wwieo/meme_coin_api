@@ -7,6 +7,10 @@ type CreateArgs struct {
 	Description string
 }
 
+type CreateReply struct {
+	ID int64 `json:"id,string"`
+}
+
 type GetArgs struct {
 	ID int64
 }

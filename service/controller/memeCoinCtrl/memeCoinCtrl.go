@@ -12,11 +12,11 @@ import (
 )
 
 type MemeCoinCtrl interface {
-	Create(ctx context.Context, args boMemeCoin.CreateArgs) error
+	Create(ctx context.Context, args boMemeCoin.CreateArgs) (boMemeCoin.CreateReply, error)
 	Get(ctx context.Context, args boMemeCoin.GetArgs) (boMemeCoin.GetReply, error)
 	Update(ctx context.Context, args boMemeCoin.UpdateArgs) error
 	IncreasePopularityScore(ctx context.Context, args boMemeCoin.IncreasePopularityScoreArgs) error
-	DeleteMemeCoin(ctx context.Context, args boMemeCoin.DeleteArgs) error
+	Delete(ctx context.Context, args boMemeCoin.DeleteArgs) error
 }
 
 func New(pack memeCoinCtrlPack) MemeCoinCtrl {
@@ -35,10 +35,11 @@ type memeCoinCtrl struct {
 	pack memeCoinCtrlPack
 }
 
-func (ctrl *memeCoinCtrl) Create(ctx context.Context, args boMemeCoin.CreateArgs) error {
+func (ctrl *memeCoinCtrl) Create(ctx context.Context, args boMemeCoin.CreateArgs) (boMemeCoin.CreateReply, error) {
+	var reply boMemeCoin.CreateReply
 	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
 	if exist, err := dao.Exist(args.Name); err != nil || exist {
-		return errorx.RecordExisted
+		return reply, errorx.RecordExisted
 	}
 
 	id := utils.GetSnowflakeIDInt64()
@@ -47,7 +48,11 @@ func (ctrl *memeCoinCtrl) Create(ctx context.Context, args boMemeCoin.CreateArgs
 		Name:        args.Name,
 		Description: args.Description,
 	}
-	return dao.Create(coinInfo)
+	if err := dao.Create(coinInfo); err != nil {
+		return reply, err
+	}
+	reply.ID = id
+	return reply, nil
 }
 
 func (ctrl *memeCoinCtrl) Get(ctx context.Context, args boMemeCoin.GetArgs) (boMemeCoin.GetReply, error) {
@@ -69,7 +74,7 @@ func (ctrl *memeCoinCtrl) IncreasePopularityScore(ctx context.Context, args boMe
 	return dao.IncreasePopularityScore(args.ID)
 }
 
-func (ctrl *memeCoinCtrl) DeleteMemeCoin(ctx context.Context, args boMemeCoin.DeleteArgs) error {
+func (ctrl *memeCoinCtrl) Delete(ctx context.Context, args boMemeCoin.DeleteArgs) error {
 	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
 	return dao.DeleteMemeCoin(args.ID)
 }
