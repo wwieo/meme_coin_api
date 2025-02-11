@@ -1,7 +1,7 @@
 FROM        golang:1.21.5-alpine AS builder
 WORKDIR     /app
 COPY        . .
-RUN         apk add --no-cache make
+RUN         apk add --no-caches make
 RUN         go install github.com/swaggo/swag/cmd/swag@latest
 RUN         make clean
 RUN         make format

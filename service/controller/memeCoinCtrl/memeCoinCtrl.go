@@ -2,13 +2,14 @@ package memeCoinCtrl
 
 import (
 	"context"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/dig"
 	"gorm.io/gorm"
-	"meme_coin_api/service/dao/orm/gormDao"
-	"meme_coin_api/service/internal/errorx"
 	"meme_coin_api/service/internal/model"
 	boMemeCoin "meme_coin_api/service/internal/model/bo/memeCoin"
 	"meme_coin_api/service/internal/utils"
+	redisDao "meme_coin_api/service/repository/caches/redis"
+	"meme_coin_api/service/repository/orm/gormDao"
 )
 
 type MemeCoinCtrl interface {
@@ -28,7 +29,8 @@ func New(pack memeCoinCtrlPack) MemeCoinCtrl {
 type memeCoinCtrlPack struct {
 	dig.In
 
-	MySQLMemeCoin *gorm.DB `name:"meme_coin"`
+	RedisMemeCoin *redis.Client `name:"meme_coin"`
+	MySQLMemeCoin *gorm.DB      `name:"meme_coin"`
 }
 
 type memeCoinCtrl struct {
@@ -38,10 +40,6 @@ type memeCoinCtrl struct {
 func (ctrl *memeCoinCtrl) Create(ctx context.Context, args boMemeCoin.CreateArgs) (boMemeCoin.CreateReply, error) {
 	var reply boMemeCoin.CreateReply
 	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
-	if exist, err := dao.Exist(args.Name); err != nil || exist {
-		return reply, errorx.RecordExisted
-	}
-
 	id := utils.GetSnowflakeIDInt64()
 	coinInfo := &model.CoinInfo{
 		ID:          id,
@@ -56,25 +54,53 @@ func (ctrl *memeCoinCtrl) Create(ctx context.Context, args boMemeCoin.CreateArgs
 }
 
 func (ctrl *memeCoinCtrl) Get(ctx context.Context, args boMemeCoin.GetArgs) (boMemeCoin.GetReply, error) {
-	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
-	memeCoin, err := dao.Get(args.ID)
+	var reply boMemeCoin.GetReply
+	caches := redisDao.NewMemeCoinCache(ctrl.pack.RedisMemeCoin)
+	coin, err := caches.Get(ctx, args.ID)
 	if err != nil {
-		return boMemeCoin.GetReply{}, err
+		return reply, err
 	}
-	return boMemeCoin.GetReply{MemeCoin: memeCoin}, nil
+	if coin != nil {
+		reply.MemeCoin = coin
+		return reply, nil
+	}
+
+	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
+	coin, err = dao.Get(args.ID)
+	if err != nil {
+		return reply, err
+	}
+	caches.Set(ctx, coin)
+	reply.MemeCoin = coin
+	return reply, nil
 }
 
 func (ctrl *memeCoinCtrl) Update(ctx context.Context, args boMemeCoin.UpdateArgs) error {
 	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
-	return dao.UpdateDescription(args.ID, args.Description)
+	if err := dao.UpdateDescription(args.ID, args.Description); err != nil {
+		return err
+	}
+	caches := redisDao.NewMemeCoinCache(ctrl.pack.RedisMemeCoin)
+	caches.Delete(ctx, args.ID)
+	return nil
 }
 
 func (ctrl *memeCoinCtrl) IncreasePopularityScore(ctx context.Context, args boMemeCoin.IncreasePopularityScoreArgs) error {
+	// TODO: Utilize a mq and cronjob to enhance availability and scalability.
 	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
-	return dao.IncreasePopularityScore(args.ID)
+	if err := dao.IncreasePopularityScore(args.ID); err != nil {
+		return err
+	}
+	caches := redisDao.NewMemeCoinCache(ctrl.pack.RedisMemeCoin)
+	caches.Delete(ctx, args.ID)
+	return nil
 }
 
 func (ctrl *memeCoinCtrl) Delete(ctx context.Context, args boMemeCoin.DeleteArgs) error {
 	dao := gormDao.NewMemeCoinDao(ctrl.pack.MySQLMemeCoin)
-	return dao.DeleteMemeCoin(args.ID)
+	if err := dao.DeleteMemeCoin(args.ID); err != nil {
+		return err
+	}
+	caches := redisDao.NewMemeCoinCache(ctrl.pack.RedisMemeCoin)
+	return caches.Delete(ctx, args.ID)
 }

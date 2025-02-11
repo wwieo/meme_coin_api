@@ -1,35 +1,30 @@
 package gormDao
 
 import (
+	"errors"
 	"gorm.io/gorm"
-	"meme_coin_api/service/dao"
+	"meme_coin_api/service/internal/errorx"
 	"meme_coin_api/service/internal/model"
+	"meme_coin_api/service/repository/orm"
 )
 
 type memeCoinDao struct {
 	db *gorm.DB
 }
 
-func NewMemeCoinDao(db *gorm.DB) dao.MemeCoinDao {
+func NewMemeCoinDao(db *gorm.DB) orm.MemeCoinDao {
 	return &memeCoinDao{
 		db: db,
 	}
-}
-
-func (dao *memeCoinDao) Exist(name string) (bool, error) {
-	var count int64
-	if err := dao.db.Table(model.TableCoinInfo.String()).
-		Where("name = ?", name).
-		Count(&count).Error; err != nil {
-		return false, err
-	}
-	return count > 0, nil
 }
 
 func (dao *memeCoinDao) Create(coinInfo *model.CoinInfo) error {
 	return dao.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Table(model.TableCoinInfo.String()).
 			Create(coinInfo).Error; err != nil {
+			if errorx.IsMySQLDuplicateEntry(err) {
+				return errorx.RecordExisted
+			}
 			return err
 		}
 
@@ -48,6 +43,9 @@ func (dao *memeCoinDao) Get(id int64) (*model.MemeCoin, error) {
 		Joins("join coin_score on coin_info.id = coin_score.coin_id").
 		Where("coin_info.id = ?", id).
 		First(&memeCoin).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errorx.NoRecord
+		}
 		return nil, err
 	}
 	return memeCoin, nil

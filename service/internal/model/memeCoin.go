@@ -20,7 +20,7 @@ type CoinInfo struct {
 	ID          int64     `json:"-" gorm:"primaryKey;column:id;autoIncrement:false"`
 	Name        string    `json:"name" gorm:"type:varchar(255);not null;column:name;uniqueIndex"`
 	Description string    `json:"description" gorm:"type:text;column:description"`
-	CreatedAt   time.Time `json:"-" gorm:"autoCreateTime;column:created_at"`
+	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime;column:created_at"`
 }
 
 func (*CoinInfo) TableName() string {

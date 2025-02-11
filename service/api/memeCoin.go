@@ -118,7 +118,7 @@ func (api *memeCoin) updateMemeCoin(ctx *gin.Context) {
 		return
 	}
 	type body struct {
-		Description string `valid:"required" json:"description"`
+		Description string `valid:"-" json:"description"`
 	}
 	var reqBody body
 	if err = ctx.BindJSON(&reqBody); err != nil {
