@@ -34,7 +34,7 @@ func newMySQL(dbName string, db config.MySQL) *gorm.DB {
 	if err = sqlDB.Ping(); err != nil {
 		log.Fatalf("Error pinging database %s: %v", dbName, err)
 	}
-	log.Printf("Pinged successfully maria database: %s", dbName)
+	log.Printf("Pinged successfully mysql database: %s", dbName)
 
 	return gormDB
 }
