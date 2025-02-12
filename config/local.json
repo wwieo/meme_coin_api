@@ -5,7 +5,7 @@
   "database_management_system" : {
     "mysql": {
       "meme_coin": {
-        "host": "db",
+        "host": "127.0.0.1",
         "port": 3306,
         "account": "root",
         "password": "",
@@ -16,7 +16,7 @@
     },
     "redis": {
       "meme_coin": {
-        "address": "cache:6379",
+        "address": "127.0.0.1:6379",
         "password": "",
         "db": 0
       }

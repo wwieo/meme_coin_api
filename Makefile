@@ -3,7 +3,7 @@ ROOT := $(realpath .)
 .PHONY: up
 ## up: build and run cmd service in local
 up: clean format docs
-	go run ./cmd/memeCoin/main.go -config=./config/config.json
+	go run ./cmd/memeCoin/main.go -config=./config/local.json
 
 .PHONY: clean
 ## clean: remove old binaries and unused file
@@ -22,3 +22,13 @@ format:
 docs:
 	swag fmt
 	swag init --generalInfo ./main.go --dir ./cmd/memeCoin,./service/api,./service/internal/model,./service/internal/errorx
+
+.PHONY: docker-build
+## docker-build: use docker-compose to build all service
+docker-build:
+	docker-compose build
+
+.PHONY: docker-up
+## docker-run: use docker-compose to up all service
+docker-up:
+	docker-compose up
