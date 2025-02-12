@@ -4,14 +4,48 @@ deployment.
 
 ![Swagger Presentation](assets/swagger_presentation.png)
 
+## Project Structure
+```
+meme_coin_api/
+├── assets/                             # Other assets to go along with the repository (images, logos, etc).
+├── cmd/
+|   ├── memeCoin/                       # Main applications for this project.
+├── config/
+│   │   ├── config.json                 # Configuration file for docker environment setup.
+│   │   ├── local.json                  # Configuration file for local environment setup.
+├── migrations/                         # SQL commands to be executed during docker-compose up.
+├── service/
+│   ├── api/                            # API route definitions
+│   ├── controller/                     # Business logic
+│   ├── internal/ 
+│   │   ├── config/                     # Handles application configuration loading and management.
+│   │   ├── database/                   # Establishes and manages database connections and queries.
+│   │   ├── errorx/                     # Defines custom error handling logic and error types.
+│   │   ├── flags/                      # Handles feature flags and application flags for toggling functionality.
+│   │   ├── model/                      # Contains data models representing entities in the application.
+│   │   ├── utils/                      # Provides utility functions and helpers for reusable logic.
+│   ├── repository/                     # Abstracts data access, separating business logic from data source specifics.
+│   │   ├── caches/
+│   │   ├── orm/  
+│   ├── memeCoin.go                     # Main service responsible for managing the project's dependency injection.
+│   ├── service.go                      # Singleton interface ensuring the service is instantiated only once.
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile                          
+├── go.mod                            
+├── go.sum                              
+├── Makefile                            # Contains all the commands for managing this project
+├── README.md                           # Project documentation
+```
+
 ## Prerequisites
-- **Go**: Version 1.20+
-- **Docker**: Version 20.10+
-- **Docker Compose**: Version 2.20+
+- Go: Version 1.20+
+- Docker: Version 20.10+
+- Docker Compose: Version 2.20+
 - optional for local setup
-  - **MySQL**
-  - **Redis**
-  - **Swaggo**
+    - MySQL
+    - Redis
+    - Swaggo
 
 ## Local Setup
 1. Clone the repository and navigate to the project directory:
@@ -42,7 +76,7 @@ deployment.
     ```
     http://localhost:8000/meme_coin_api/swagger/index.html
     ```
-   
+
 ## Running with Docker
 1. Build
    ```
